@@ -50,6 +50,12 @@ public class GenerateAST {
         writer.println();
         writer.println("abstract class " + baseName + " {"); // Define the abstract base class
 
+        defineOperation(writer, baseName, types); // In the Visitor pattern, "Visitor" is typically used, but "Operation" is more intuitive for this context.
+
+        // Base accept method
+        writer.println();
+        writer.println("  abstract <R> R execute(Operation<R> operation);"); // Using "execute" instead of "accept". 
+
         // Generate AST classes based on the provided types
         for (String type : types) {
             String className = type.split(":")[0].trim(); // Extract the class name
@@ -59,6 +65,25 @@ public class GenerateAST {
 
         writer.println("}");
         writer.close();
+    }
+
+    /**
+     * Defines an operation interface for executing operations on different types of AST nodes. More commonly known as the Visitor pattern.
+     *
+     * @param writer    The PrintWriter object to write the operation interface.
+     * @param baseName  The base name for the AST classes.
+     * @param types     The list of types to generate operation methods for.
+     */
+    private static void defineOperation(PrintWriter writer, String baseName, List<String> types) {
+        writer.println("  interface Operation<R> {"); // Define the visitor interface (We will use Operation instead).
+
+        for (String type : types) {
+
+            String typeName = type.split(":")[0].trim(); // Get the name of the type (e.g. "Binary")
+            writer.println("    R on" + typeName + baseName + "(" + typeName + " " + baseName.toLowerCase() + ");"); // For each type, define a visit method (e.g. "R operator.onBinary(Binary binary)"). Using "on" instead of visit for clarity
+        }
+        
+        writer.println("  }");
     }
 
     /**
@@ -84,6 +109,13 @@ public class GenerateAST {
             writer.println("      this." + name + " = " + name + ";"); // Store the field name in the class
         }
 
+        writer.println("    }");
+
+        // Operation (Visitor) pattern
+        writer.println();
+        writer.println("    @Override");
+        writer.println("    <R> R execute(Operation<R> operation) {");
+        writer.println("      return operation.on" + className + baseName + "(this);");
         writer.println("    }");
 
         // Define fields for the AST class
