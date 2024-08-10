@@ -17,14 +17,14 @@ abstract class Shape {
     abstract void execute(Operation operation);
 }
 
-class Circle extends Entity {
+class Circle extends Shape {
     @Override
     void execute(Operation operation) {
         operation.onCircle(this);
     }
 }
 
-class Triangle extends Entity {
+class Triangle extends Shape {
     @Override
     void execute(Operation operation) {
         operation.onTriangle(this);
