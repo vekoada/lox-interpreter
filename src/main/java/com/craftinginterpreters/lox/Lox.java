@@ -84,12 +84,13 @@ public class Lox {
      */
     private static void run(String source) {
         Scanner scanner = new Scanner(source);
-        List<Token> tokens = scanner.scanTokens(); // Parse and tokenize source string
+        List<Token> tokens = scanner.scanTokens(); // Scan and tokenize source string
+        Parser parser = new Parser(tokens);
+        Expr expression = parser.parse(); // Parse source string
 
-        // Just printing the tokens for now.
-        for (Token token : tokens) {
-            System.out.println(token);
-        }
+        if (hadError) return; // Stop if encountered syntax error
+
+        System.out.println(new ASTPrinter().print(expression));
     }
 
     /**
