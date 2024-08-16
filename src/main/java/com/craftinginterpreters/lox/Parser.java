@@ -3,11 +3,21 @@ package com.craftinginterpreters.lox;
 import java.util.List;
 
 class Parser {
+    private static class ParseError extends RuntimeException {}
+
     private final List<Token> tokens;
     private int current = 0;
 
     Parser(List<Token> tokens) {
         this.tokens = tokens;
+    }
+
+    Expr parse()  {
+        try {
+            return expression();
+        } catch(ParseError error) {
+            return null;
+        }
     }
 
     private Expr expression() {
@@ -84,8 +94,9 @@ class Parser {
             consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
             return new Expr.Grouping(expression);
         }
-      }
 
+        throw error(peek(), "Expect expression.");
+      }
 
     private boolean match(TokenType... types) {
         for(TokenType type : types) {
@@ -96,6 +107,12 @@ class Parser {
         }
         return false;
     }
+    
+    private Token consume(TokenType type, String message) {
+        if (check(type)) return advance();
+
+        throw error(peek(), message);
+      }
 
     private boolean check(TokenType type) {
         if(isAtEnd()) return false;
@@ -118,4 +135,39 @@ class Parser {
     private Token previous() {
         return tokens.get(current - 1);
     }
+
+    private ParseError report(Token token, String message) {
+        Lox.error(token, message);
+        return new ParseError();
+    }
+
+    static void error(Token token, String message) {
+        if (token.type == TokenType.EOF) {
+            report(token.line, " at end", message);
+        } else {
+            report(token.line, "'", token.lexeme, "'", message);
+        }
+    }
+
+    private void synchronize() {
+        advance();
+    
+        while (!isAtEnd()) {
+          if (previous().type == TokenType.SEMICOLON) return;
+    
+          switch (peek().type) {
+            case CLASS:
+            case FUN:
+            case VAR:
+            case FOR:
+            case IF:
+            case WHILE:
+            case PRINT:
+            case RETURN:
+              return;
+          }
+    
+          advance();
+        }
+      }
 }
