@@ -61,6 +61,31 @@ class Parser {
         return expression;
       }
 
+      private Expr unary() {
+        if (match(TokenType.BANG, TokenType.MINUS)){
+            Token operator = previous();
+            Expr right = unary();
+            return new Expr.Unary(operator, right);
+        }
+        return primary();
+      }
+
+      private Expr primary() {
+        if (match(TokenType.FALSE)) return new Expr.Literal(false);
+        if (match(TokenType.TRUE)) return new Expr.Literal(true);
+        if (match(TokenType.NIL)) return new Expr.Literal(null);
+
+        if (match(TokenType.NUMBER, TokenType.STRING)) {
+            return new Expr.Literal(previous().literal);
+        }
+
+        if (match(TokenType.LEFT_PAREN)) {
+            Expr expression = expression();
+            consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
+            return new Expr.Grouping(expression);
+        }
+      }
+
 
     private boolean match(TokenType... types) {
         for(TokenType type : types) {
